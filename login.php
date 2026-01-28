@@ -1,36 +1,48 @@
 <?php
 session_start();
 
-// entered username needs to match the user and pass I made here
+require_once 'db.php';
+
+// check if typed username and password match database creds
 function authenticate_user($username, $password) {
-    $valid_username = 'woody';
-    $valid_password = 'fijiwood';
+    global $pdo;
     
-    // sees if entered creds are valid
-    if ($username === $valid_username && $password === $valid_password) {
-        return true;
+    try {
+        // prep SQL statement to prevent SQL bad
+        $stmt = $pdo->prepare("SELECT password FROM users WHERE username = :username");
+        $stmt->bindParam(':username', $username);
+        $stmt->execute();
+        
+        // Get the user pass hash from database
+        $user = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        // verify password matches that hash in the database
+        if ($user && password_verify($password, $user['password'])) {
+            return true;
+        }
+        return false;
+    } catch(PDOException $e) {
+        return false;
     }
-    return false;
 }
 
-// error message empty variable
+// empty error message
 $error = '';
 
-// sees if form was submitted when the user clicks the login button
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // finds username and pass is in there
+    // get username from form, or empty string if not set
     $username = $_POST['username'] ?? '';
+    // get pass from form, or empty string if not set
     $password = $_POST['password'] ?? '';
     
-    // checks if login creds are correct
+// checks if login creds are correct
     if (authenticate_user($username, $password)) {
-        // session stuff
+// user session stuff
         $_SESSION['user'] = $username;
-        // redirect to simplx page, might change the name
         header('Location: dashboard.php');
         exit();
     } else {
-        // error message if login fails
+        // error msg if login fails
         $error = 'Invalid username or password.';
     }
 }
@@ -40,40 +52,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - Simplx Access</title>
+    <title>LOGIN</title>
     <link rel="stylesheet" href="stylesheet.css">
 </head>
-
 <body>
-    <!-- login container and box from stylesheet -->
     <div class="login-container">
         <div class="login-box">
-            <!-- logo image -->
             <img src="images/logo.webp" alt="Logo" class="logo">
-            <!-- login text title -->
             <h1>LOGIN</h1>
-            <!-- checks for error to display -->
+            <!-- checks for error msg to display -->
             <?php if ($error): ?>
-                <!-- shows that error box -->
                 <div class="error-message"><?php echo htmlspecialchars($error); ?></div>
             <?php endif; ?>
             <form method="post">
-                <!-- container for username input field and label thing -->
                 <div class="form-group">
                     <label for="username">Username</label>
-                    <!-- required = must be filled -->
                     <input type="text" id="username" name="username" placeholder="Enter username" required>
                 </div>
-                <!-- Container for pass input field and label -->
                 <div class="form-group">
-                    <!-- password label -->
                     <label for="password">Password</label>
                     <!-- password input box -->
                     <input type="password" id="password" name="password" placeholder="Enter password" required>
                 </div>
-                <!-- login button -->
+                <!-- submit button that sends the form data -->
                 <button type="submit">Login</button>
             </form>
+            <!-- link to register link page -->
+            <p style="text-align: center; margin-top: 20px; color: #9197B3;">
+                Don't have an account? <a href="register.php" style="color: #2C50D4; text-decoration: none;">Register here</a>
+            </p>
         </div>
     </div>
 </body>
