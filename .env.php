@@ -4,7 +4,7 @@ return [
     'DB_NAME' => 'idm250',
     'DB_USER' => 'root',
     'DB_PASS' => 'root',
-    'X-API-KEY' => 'temp-key-tbd' 
+    'X-API-KEY' => 'temp_key_tbd' 
         //This is new from lecture! For authentication
 ]
 ?>
